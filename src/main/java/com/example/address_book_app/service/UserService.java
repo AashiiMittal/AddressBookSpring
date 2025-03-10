@@ -25,6 +25,7 @@ public class UserService implements IUserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // Register User
+    @Override
     public String registerUser(UserDTO userdto) {
         if (userRepository.existsByEmail(userdto.getEmail())) {
             return "Email is already in use!";
@@ -46,6 +47,7 @@ public class UserService implements IUserService {
     }
 
     // Authenticate User and Generate Token
+    @Override
     public String authenticateUser(String email, String password) {
         Optional<User> userOpt = userRepository.findByEmail(email);
 
@@ -63,6 +65,7 @@ public class UserService implements IUserService {
         return jwtUtil.generateToken(email);
     }
     // Forgot Password Implementation
+    @Override
     public String forgotPassword(String email, String newPassword) {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
@@ -84,6 +87,7 @@ public class UserService implements IUserService {
     }
 
     // Reset Password Implementation
+    @Override
     public String resetPassword(String email, String currentPassword, String newPassword) {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
