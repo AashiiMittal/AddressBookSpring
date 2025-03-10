@@ -3,6 +3,7 @@
     import com.example.address_book_app.dto.LoginDTO;
     import com.example.address_book_app.dto.UserDTO;
     import com.example.address_book_app.service.UserService;
+    import jakarta.validation.Valid;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
     import org.springframework.web.bind.annotation.*;
@@ -21,14 +22,14 @@
 
         // Register User
         @PostMapping("/register")
-        public ResponseEntity<String> registerUser(@RequestBody UserDTO userDTO) {
+        public ResponseEntity<String> registerUser(@Valid @RequestBody UserDTO userDTO) {
             String response = userService.registerUser(userDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(response); // Return 201 Created
         }
 
         // Login User and Generate JWT Token
         @PostMapping("/login")
-        public ResponseEntity<?> loginUser(@RequestBody LoginDTO loginRequest) {
+        public ResponseEntity<?> loginUser(@Valid @RequestBody LoginDTO loginRequest) {
             String token = userService.authenticateUser(
                     loginRequest.getEmail(),
                     loginRequest.getPassword()
@@ -42,7 +43,7 @@
         }
         // Forgot Password: Update password and send email
         @PutMapping("/forgot-Password/{email}")
-        public ResponseEntity<?> forgotPassword(@PathVariable String email, @RequestBody Map<String, String> request) {
+        public ResponseEntity<?> forgotPassword(@PathVariable String email,@Valid @RequestBody Map<String, String> request) {
             String newPassword = request.get("newPassword");
             if (newPassword == null || newPassword.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "New password cannot be empty!"));
@@ -55,8 +56,8 @@
         @PutMapping("/reset-Password/{email}")
         public ResponseEntity<?> resetPassword(
                 @PathVariable String email,
-                @RequestParam String currentPassword,
-                @RequestParam String newPassword) {
+                @Valid @RequestParam String currentPassword,
+                @Valid @RequestParam String newPassword) {
 
             String response = userService.resetPassword(email, currentPassword, newPassword);
             return ResponseEntity.ok(Map.of("message", response));
