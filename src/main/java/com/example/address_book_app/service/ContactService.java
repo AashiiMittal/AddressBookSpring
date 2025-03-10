@@ -3,16 +3,19 @@ package com.example.address_book_app.service;
 import com.example.address_book_app.dto.ContactDTO;
 import com.example.address_book_app.model.Contact;
 import com.example.address_book_app.repository.ContactRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class ContactService implements IContactService {
 
-    private final ContactRepository contactRepository;
+    @Autowired
+    private ContactRepository contactRepository;
 
     public ContactService(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
@@ -30,6 +33,7 @@ public class ContactService implements IContactService {
 
     @Override
     public List<ContactDTO> getAllContacts() {
+        log.info("Fetching all contacts from the database.");
         return contactRepository.findAll()
                 .stream()
                 .map(this::convertToDTO)
@@ -38,14 +42,22 @@ public class ContactService implements IContactService {
 
     @Override
     public ContactDTO getContactById(Long id) {
+        log.info("Fetching contact with ID: {}", id);
         Optional<Contact> contact = contactRepository.findById(id);
+        if (contact.isPresent()) {
+            log.info("Contact found: {}", contact.get());
+        } else {
+            log.warn("Contact with ID {} not found.", id);
+        }
         return contact.map(this::convertToDTO).orElse(null);
     }
 
     @Override
     public ContactDTO createContact(ContactDTO contactDTO) {
+        log.info("Creating new contact: {}", contactDTO);
         Contact contact = convertToEntity(contactDTO);
         Contact savedContact = contactRepository.save(contact);
+        log.info("Contact saved successfully with ID: {}", savedContact.getId());
         return convertToDTO(savedContact);
     }
 
@@ -59,13 +71,22 @@ public class ContactService implements IContactService {
             contact.setPhoneNumber(contactDTO.getPhoneNumber());
             contact.setEmail(contactDTO.getEmail());
             contactRepository.save(contact);
+            log.info("Contact updated successfully: {}", contact);
             return convertToDTO(contact);
+        } else {
+            log.warn("Attempted to update non-existing contact with ID: {}", id);
         }
         return null;
     }
 
     @Override
     public void deleteContact(Long id) {
-        contactRepository.deleteById(id);
+        log.info("Deleting contact with ID: {}", id);
+        if (contactRepository.existsById(id)) {
+            contactRepository.deleteById(id);
+            log.info("Contact with ID {} deleted successfully.", id);
+        } else {
+            log.warn("Attempted to delete non-existing contact with ID: {}", id);
+        }
     }
 }
