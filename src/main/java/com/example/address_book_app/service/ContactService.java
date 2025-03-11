@@ -5,11 +5,14 @@ import com.example.address_book_app.model.Contact;
 import com.example.address_book_app.repository.ContactRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 public class ContactService implements IContactService {
@@ -23,7 +26,7 @@ public class ContactService implements IContactService {
 
     // ✅ Convert Model to DTO
     private ContactDTO convertToDTO(Contact contact) {
-        return new ContactDTO(contact.getId(),contact.getName(), contact.getPhoneNumber(), contact.getEmail(), contact.getAddress());
+        return new ContactDTO(contact.getId(), contact.getName(), contact.getPhoneNumber(), contact.getEmail(), contact.getAddress());
     }
 
     // ✅ Convert DTO to Model
@@ -31,7 +34,9 @@ public class ContactService implements IContactService {
         return new Contact(contactDTO.getId(), contactDTO.getName(), contactDTO.getPhoneNumber(), contactDTO.getEmail(), contactDTO.getAddress());
     }
 
+    // ✅ Fetch all contacts (Cache result)
     @Override
+    @Cacheable(value = "allContacts")
     public List<ContactDTO> getAllContacts() {
         log.info("Fetching all contacts from the database.");
         return contactRepository.findAll()
@@ -40,7 +45,9 @@ public class ContactService implements IContactService {
                 .collect(Collectors.toList());
     }
 
+    // ✅ Fetch a single contact by ID (Cache result)
     @Override
+    @Cacheable(value = "contacts", key = "#id")
     public ContactDTO getContactById(Long id) {
         log.info("Fetching contact with ID: {}", id);
         Optional<Contact> contact = contactRepository.findById(id);
@@ -52,7 +59,9 @@ public class ContactService implements IContactService {
         return contact.map(this::convertToDTO).orElse(null);
     }
 
+    // ✅ Create new contact (Evict cache)
     @Override
+    @CacheEvict(value = {"contacts", "allContacts"}, allEntries = true)
     public ContactDTO createContact(ContactDTO contactDTO) {
         log.info("Creating new contact: {}", contactDTO);
         Contact contact = convertToEntity(contactDTO);
@@ -61,7 +70,9 @@ public class ContactService implements IContactService {
         return convertToDTO(savedContact);
     }
 
+    // ✅ Update contact (Evict cache)
     @Override
+    @CacheEvict(value = {"contacts", "allContacts"}, allEntries = true)
     public ContactDTO updateContact(Long id, ContactDTO contactDTO) {
         Optional<Contact> optionalContact = contactRepository.findById(id);
 
@@ -79,7 +90,9 @@ public class ContactService implements IContactService {
         return null;
     }
 
+    // ✅ Delete contact (Evict cache)
     @Override
+    @CacheEvict(value = {"contacts", "allContacts"}, key = "#id")
     public void deleteContact(Long id) {
         log.info("Deleting contact with ID: {}", id);
         if (contactRepository.existsById(id)) {
