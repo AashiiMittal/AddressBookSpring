@@ -3,7 +3,7 @@ package com.example.address_book_app.service;
 import com.example.address_book_app.dto.UserDTO;
 import com.example.address_book_app.model.User;
 import com.example.address_book_app.repository.UserRepository;
-import com.example.address_book_app.security.JwtUtil;
+import com.example.address_book_app.utility.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

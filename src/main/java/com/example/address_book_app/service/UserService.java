@@ -5,7 +5,7 @@ import com.example.address_book_app.model.User;
 import com.example.address_book_app.repository.UserRepository;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
-import com.example.address_book_app.security.JwtUtil;
+import com.example.address_book_app.utility.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,9 @@ public class UserService implements IUserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    @Autowired
+    RabbitMQProducer rabbitMQProducer;
+
     // Register User
     @Override
     public String registerUser(UserDTO userdto) {
@@ -49,6 +52,11 @@ public class UserService implements IUserService {
         emailService.sendEmail(user.getEmail(), subject, body);
 
         log.info("User {} registered successfully.", user.getEmail());
+
+        rabbitMQProducer.sendEmailNotification(user.getEmail(),
+                "Welcome to Our Platform!",
+                "Hello " + user.getUsername() + ",\n\nYour account has been successfully created!");
+
 
         // Clear Redis cache when a new user is registered
         clearUserCache(user.getEmail());
@@ -74,8 +82,11 @@ public class UserService implements IUserService {
             log.warn("Login failed: Incorrect password for email: {}", email);
             return "Invalid email or password!";
         }
-
+        String token = jwtUtil.generateToken(email);
         log.info("Login successful for user: {}", email);
+        rabbitMQProducer.sendEmailNotification(user.getEmail(),
+                "Welcome Back!",
+                "Hello " + user.getUsername() + ",\n\nYou have successfully logged in. Your token: " + token);
         return jwtUtil.generateToken(email);
     }
 

@@ -51,7 +51,7 @@ public class ContactController {
     @PostMapping("/add")
     public ResponseEntity<Object> createContact(@RequestBody ContactDTO contactDTO) {
         try {
-            // Manual validation
+            // Manual validation    
             List<String> errors = validateContact(contactDTO);
 
             // If errors exist, return them

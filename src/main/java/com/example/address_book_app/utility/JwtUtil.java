@@ -1,4 +1,4 @@
-package com.example.address_book_app.security;
+package com.example.address_book_app.utility;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
